@@ -1,0 +1,9 @@
+#EXTM3U
+#EXTINF:-1,Antena 1 HD
+https://dai.google.com/linear/hls/pa/event/lntFTtOxQHqgDcnf6IyHHg/stream/b5477bf1-c45c-46e0-bc49-2f0199a63f9b:BRU/master.m3u8
+
+#EXTINF:-1,Antena Stars HD
+https://dai.google.com/linear/hls/pa/event/f_y14PC5R0Cxqus6Xy1-Kg/stream/ca4e607f-956b-4a26-9609-fafe2127834c:BRU/master.m3u8
+
+#EXTINF:-1,Kanal D SD
+https://stream1.kanald.ro/iphone/knd-live_mid/index.m3u8
