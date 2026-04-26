@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>canales-tv-romania-github</title>
+  <title>canales-tv-romania-github-video-max</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{min-height:100vh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.6;background:var(--color-bg);color:var(--color-text)}
-    button,input,textarea{font:inherit;color:inherit}
+    button,input{font:inherit;color:inherit}
     .app{max-width:1240px;margin:0 auto;padding:var(--space-4)}
     .topbar{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4) 0 var(--space-6)}
     .brand{display:flex;align-items:center;gap:var(--space-3)}
@@ -44,6 +44,7 @@
     .player-wrap,.channels-panel{padding:var(--space-4)}
     .video-shell{position:relative;background:#000;border-radius:calc(var(--radius-xl) - var(--space-4));overflow:hidden;box-shadow:var(--shadow-md);padding:var(--space-3)}
     video{width:100%;max-width:640px;margin:0 auto;aspect-ratio:16/9;background:#000;display:block;border-radius:calc(var(--radius-lg) - 2px)}
+    video:fullscreen{max-width:none;width:100vw;height:100vh;aspect-ratio:auto;object-fit:contain;border-radius:0;background:#000}
     .overlay{position:absolute;inset:auto var(--space-4) var(--space-4) auto;display:flex;gap:var(--space-2)}
     .pill{padding:.45rem .8rem;border-radius:999px;background:rgba(0,0,0,.58);backdrop-filter:blur(10px);color:#fff;font-size:.82rem}
     .controls{display:flex;flex-wrap:wrap;gap:var(--space-3);padding-top:var(--space-4)}
@@ -68,13 +69,8 @@
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <div class="logo" aria-label="Logo TV">
-          <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="3"></rect><path d="M8 20h8"></path><path d="M12 17v3"></path><path d="M7 2l5 3 5-3"></path></svg>
-        </div>
-        <div>
-          <h1>Canales desde GitHub</h1>
-          <p>La página carga la lista de streams desde un archivo raw de GitHub.</p>
-        </div>
+        <div class="logo" aria-label="Logo TV"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="3"></rect><path d="M8 20h8"></path><path d="M12 17v3"></path><path d="M7 2l5 3 5-3"></path></svg></div>
+        <div><h1>Canales desde GitHub</h1><p>El botón maximiza solo el vídeo.</p></div>
       </div>
       <button class="theme-toggle" type="button" data-theme-toggle aria-label="Cambiar tema">◐</button>
     </header>
@@ -87,14 +83,14 @@
         </div>
         <button id="loadGithubBtn" class="btn btn-primary" type="button">Cargar desde GitHub</button>
       </div>
-      <p class="help">Formato recomendado: JSON con un array como <strong>[{"name":"Kanal D","info":"Directo","url":"https://...m3u8"}]</strong>. También acepta M3U simple con líneas <strong>#EXTINF</strong> y URL en la línea siguiente. [web:189][web:195][web:201]</p>
+      <p class="help">Acepta JSON o M3U simple desde un archivo raw público de GitHub. [web:189][web:195][web:201]</p>
       <p class="status" id="githubStatus">Esperando una URL raw de GitHub.</p>
     </section>
 
     <main class="layout">
       <section class="player-panel">
         <div class="player-wrap">
-          <div class="video-shell" id="playerShell">
+          <div class="video-shell">
             <video id="video" controls autoplay muted playsinline></video>
             <div class="overlay">
               <span class="pill">LIVE</span>
@@ -102,8 +98,7 @@
             </div>
           </div>
           <div class="controls">
-            <button class="btn btn-primary" id="fullscreenBtn" type="button">Hacer grande</button>
-            <button class="btn" id="maximizeBtn" type="button">Maximizar pantalla</button>
+            <button class="btn btn-primary" id="fullscreenBtn" type="button">Maximizar vídeo</button>
             <button class="btn" id="reloadBtn" type="button">Recargar canal</button>
           </div>
           <p class="status" id="status">Carga una lista desde GitHub para empezar.</p>
@@ -112,13 +107,10 @@
 
       <aside class="channels-panel">
         <div class="panel-head">
-          <div>
-            <h2>Canales</h2>
-            <p>Se rellenan automáticamente desde GitHub.</p>
-          </div>
+          <div><h2>Canales</h2><p>Se rellenan automáticamente desde GitHub.</p></div>
         </div>
         <div class="channel-list" id="channelList"></div>
-        <div class="hint">Usa un enlace <strong>raw.githubusercontent.com</strong> o una URL de GitHub Pages que devuelva el archivo en texto plano. Las páginas web suelen poder leer JSON o texto con <code>fetch()</code> desde una URL raw pública. [web:189][web:191][web:201]</div>
+        <div class="hint">Usa un enlace raw público. Las rutas raw de GitHub sirven el contenido del fichero directamente y se pueden leer con <code>fetch()</code> si son públicas. [web:189][web:191][web:201]</div>
       </aside>
     </main>
   </div>
@@ -128,10 +120,8 @@
     const statusEl = document.getElementById('status');
     const githubStatusEl = document.getElementById('githubStatus');
     const currentChannelEl = document.getElementById('currentChannel');
-    const playerShell = document.getElementById('playerShell');
     const listEl = document.getElementById('channelList');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const maximizeBtn = document.getElementById('maximizeBtn');
     const reloadBtn = document.getElementById('reloadBtn');
     const loadGithubBtn = document.getElementById('loadGithubBtn');
     const githubUrlInput = document.getElementById('githubUrl');
@@ -177,9 +167,7 @@
     function parseJsonChannels(text) {
       const data = JSON.parse(text);
       if (!Array.isArray(data)) throw new Error('El JSON debe ser un array.');
-      return data
-        .filter(item => item && item.url)
-        .map(item => ({ name: item.name || 'Canal', info: item.info || 'GitHub JSON', url: item.url }));
+      return data.filter(item => item && item.url).map(item => ({ name: item.name || 'Canal', info: item.info || 'GitHub JSON', url: item.url }));
     }
 
     function parseM3U(text) {
@@ -205,11 +193,7 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = await response.text();
         let parsed = [];
-        try {
-          parsed = parseJsonChannels(text);
-        } catch {
-          parsed = parseM3U(text);
-        }
+        try { parsed = parseJsonChannels(text); } catch { parsed = parseM3U(text); }
         if (!parsed.length) throw new Error('No se encontraron canales válidos.');
         channels = parsed;
         activeIndex = 0;
@@ -273,15 +257,10 @@
     });
 
     fullscreenBtn.addEventListener('click', () => {
-      if (playerShell.requestFullscreen) playerShell.requestFullscreen();
-      else if (playerShell.webkitRequestFullscreen) playerShell.webkitRequestFullscreen();
-      else if (playerShell.msRequestFullscreen) playerShell.msRequestFullscreen();
-    });
-
-    maximizeBtn.addEventListener('click', () => {
-      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-      else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
-      else if (document.documentElement.msRequestFullscreen) document.documentElement.msRequestFullscreen();
+      if (video.requestFullscreen) video.requestFullscreen();
+      else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+      else if (video.msRequestFullscreen) video.msRequestFullscreen();
     });
 
     reloadBtn.addEventListener('click', () => loadChannel(activeIndex));
