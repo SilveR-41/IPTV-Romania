@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPTV Romania Player</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0d0d0d; color: #eee; display: flex; height: 100vh; overflow: hidden; }
+    #sidebar { width: 280px; background: #1a1a2e; display: flex; flex-direction: column; border-right: 2px solid #e94560; }
+    #sidebar h1 { background: #e94560; color: #fff; padding: 16px; font-size: 1.1rem; text-align: center; letter-spacing: 1px; }
+    #search { padding: 10px; }
+    #search input { width: 100%; padding: 8px 12px; border-radius: 20px; border: 1px solid #444; background: #111; color: #eee; outline: none; }
+    #channel-list { overflow-y: auto; flex: 1; }
+    .channel-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #222; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
+    .channel-item:hover { background: #16213e; }
+    .channel-item.active { background: #e94560; color: #fff; }
+    .ch-icon { width: 32px; height: 32px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem; flex-shrink: 0; }
+    .channel-item.active .ch-icon { background: #fff; color: #e94560; }
+    #main { flex: 1; display: flex; flex-direction: column; }
+    #player-header { background: #16213e; padding: 12px 20px; border-bottom: 1px solid #333; }
+    #player-header h2 { font-size: 1rem; color: #e94560; }
+    #player-header p { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
+    #video-wrap { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+    video { width: 100%; height: 100%; object-fit: contain; }
+    #placeholder { text-align: center; color: #555; }
+    #placeholder svg { width: 80px; height: 80px; margin-bottom: 12px; }
+    #error-msg { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(233,69,96,0.85); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 0.85rem; display: none; }
+    #status-bar { background: #111; padding: 6px 16px; font-size: 0.75rem; color: #666; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #111; } ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="sidebar">
+  <h1>&#128250; IPTV Romania</h1>
+  <div id="search"><input type="text" id="searchInput" placeholder="Buscar canal..." oninput="filterChannels()"/></div>
+  <div id="channel-list"></div>
+</div>
+<div id="main">
+  <div id="player-header">
+    <h2 id="now-playing">Selecciona un canal</h2>
+    <p id="stream-url">Carga el archivo M3U y elige un canal de la lista</p>
+  </div>
+  <div id="video-wrap">
+    <div id="placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><p>Ningún canal seleccionado</p></div>
+    <video id="video" controls style="display:none"></video>
+    <div id="error-msg">&#9888; No se puede reproducir este stream</div>
+  </div>
+  <div id="status-bar" id="status">Listo &mdash; <span id="ch-count">0</span> canales cargados</div>
+</div>
+<script>
+  const M3U_URL = 'https://raw.githubusercontent.com/SilveR-41/IPTV-Romania/main/IPTV.m3u';
+  let channels = [], hls = null;
+
+  async function loadM3U() {
+    try {
+      const res = await fetch(M3U_URL);
+      const text = await res.text();
+      channels = parseM3U(text);
+      document.getElementById('ch-count').textContent = channels.length;
+      renderChannels(channels);
+    } catch(e) {
+      document.getElementById('ch-count').textContent = 'Error al cargar M3U';
+    }
+  }
+
+  function parseM3U(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    const result = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('#EXTINF')) {
+        const nameMatch = lines[i].match(/,(.+)$/);
+        const name = nameMatch ? nameMatch[1].trim() : 'Canal ' + (result.length + 1);
+        const url = lines[i + 1] && !lines[i + 1].startsWith('#') ? lines[i + 1] : null;
+        if (url) result.push({ name, url });
+      }
+    }
+    return result;
+  }
+
+  function renderChannels(list) {
+    const container = document.getElementById('channel-list');
+    container.innerHTML = '';
+    list.forEach((ch, idx) => {
+      const div = document.createElement('div');
+      div.className = 'channel-item';
+      div.dataset.idx = idx;
+      const initials = ch.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      div.innerHTML = '<div class="ch-icon">' + initials + '</div><span>' + ch.name + '</span>';
+      div.onclick = () => playChannel(idx);
+      container.appendChild(div);
+    });
+  }
+
+  function filterChannels() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = channels.filter(c => c.name.toLowerCase().includes(q));
+    renderChannels(filtered);
+  }
+
+  function playChannel(idx) {
+    document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+    const items = document.querySelectorAll('.channel-item');
+    items.forEach(el => { if (parseInt(el.dataset.idx) === idx) el.classList.add('active'); });
+    const ch = channels[idx];
+    document.getElementById('now-playing').textContent = ch.name;
+    document.getElementById('stream-url').textContent = ch.url;
+    document.getElementById('placeholder').style.display = 'none';
+    const video = document.getElementById('video');
+    video.style.display = 'block';
+    const errMsg = document.getElementById('error-msg');
+    errMsg.style.display = 'none';
+    if (hls) { hls.destroy(); hls = null; }
+    if (Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(ch.url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+      hls.on(Hls.Events.ERROR, (e, data) => { if (data.fatal) { errMsg.style.display = 'block'; setTimeout(() => errMsg.style.display = 'none', 4000); } });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = ch.url;
+      video.play();
+    } else {
+      errMsg.style.display = 'block';
+    }
+  }
+
+  loadM3U();
+</script>
+</body>
+</html>
