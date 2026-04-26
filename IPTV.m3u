@@ -1,6 +1,6 @@
 #EXTM3U
 #EXTINF:-1,Antena 1 HD
-https://dai.google.com/linear/hls/pa/event/lntFTtOxQHqgDcnf6IyHHg/stream/ab468d62-f36e-4b4a-8317-acdf95635ed0:GRQ/master
+https://dai.google.com/linear/hls/pa/event/lntFTtOxQHqgDcnf6IyHHg/stream/ab468d62-f36e-4b4a-8317-acdf95635ed0:GRQ/master.m3u8
 
 #EXTINF:-1,Antena Stars HD
 https://dai.google.com/linear/hls/pa/event/f_y14PC5R0Cxqus6Xy1-Kg/stream/1e89b2fc-b9ac-4208-b98f-4764ca3dc55e:BRU/master.m3u8
