@@ -2,131 +2,214 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IPTV Romania Player</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>canales-tv-romania-v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0d0d0d; color: #eee; display: flex; height: 100vh; overflow: hidden; }
-    #sidebar { width: 280px; background: #1a1a2e; display: flex; flex-direction: column; border-right: 2px solid #e94560; }
-    #sidebar h1 { background: #e94560; color: #fff; padding: 16px; font-size: 1.1rem; text-align: center; letter-spacing: 1px; }
-    #search { padding: 10px; }
-    #search input { width: 100%; padding: 8px 12px; border-radius: 20px; border: 1px solid #444; background: #111; color: #eee; outline: none; }
-    #channel-list { overflow-y: auto; flex: 1; }
-    .channel-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #222; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
-    .channel-item:hover { background: #16213e; }
-    .channel-item.active { background: #e94560; color: #fff; }
-    .ch-icon { width: 32px; height: 32px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem; flex-shrink: 0; }
-    .channel-item.active .ch-icon { background: #fff; color: #e94560; }
-    #main { flex: 1; display: flex; flex-direction: column; }
-    #player-header { background: #16213e; padding: 12px 20px; border-bottom: 1px solid #333; }
-    #player-header h2 { font-size: 1rem; color: #e94560; }
-    #player-header p { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
-    #video-wrap { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
-    video { width: 100%; height: 100%; object-fit: contain; }
-    #placeholder { text-align: center; color: #555; }
-    #placeholder svg { width: 80px; height: 80px; margin-bottom: 12px; }
-    #error-msg { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(233,69,96,0.85); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 0.85rem; display: none; }
-    #status-bar { background: #111; padding: 6px 16px; font-size: 0.75rem; color: #666; }
-    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #111; } ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 3px; }
+    :root, [data-theme="light"] {
+      --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-surface-offset:#f3f0ec;
+      --color-border:#d4d1ca; --color-text:#28251d; --color-text-muted:#6e6b65; --color-text-inverse:#f9f8f4;
+      --color-primary:#01696f; --color-primary-hover:#0c4e54; --color-primary-highlight:#cedcd8; --color-error:#a12c7b;
+      --radius-md:.5rem; --radius-lg:.75rem; --radius-xl:1rem; --shadow-sm:0 1px 2px rgba(0,0,0,.06); --shadow-md:0 12px 32px rgba(0,0,0,.12);
+      --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-6:1.5rem; --space-8:2rem;
+      --text-sm:.95rem; --text-base:1rem; --text-lg:1.15rem; --text-xl:clamp(1.5rem,1.2rem + 1vw,2.2rem);
+      --font-body:'Inter',system-ui,sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#201f1d; --color-surface-offset:#22211f;
+      --color-border:#393836; --color-text:#e4e2de; --color-text-muted:#aaa7a1; --color-text-inverse:#171614;
+      --color-primary:#4f98a3; --color-primary-hover:#227f8b; --color-primary-highlight:#313b3b; --color-error:#d163a7;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.2); --shadow-md:0 12px 32px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.6;background:var(--color-bg);color:var(--color-text)}
+    button{font:inherit;color:inherit;cursor:pointer}
+    .app{max-width:1220px;margin:0 auto;padding:var(--space-4)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-4) 0 var(--space-6)}
+    .brand{display:flex;align-items:center;gap:var(--space-3)}
+    .logo{width:42px;height:42px;border-radius:12px;background:var(--color-primary);color:var(--color-text-inverse);display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+    .brand h1{font-size:var(--text-xl);line-height:1}
+    .brand p{color:var(--color-text-muted);font-size:var(--text-sm)}
+    .theme-toggle{min-width:44px;min-height:44px;border:1px solid var(--color-border);background:var(--color-surface);border-radius:999px;padding:0 var(--space-4)}
+    .layout{display:grid;grid-template-columns:1.1fr .9fr;gap:var(--space-6)}
+    .player-panel,.channels-panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm)}
+    .player-wrap,.channels-panel{padding:var(--space-4)}
+    .video-shell{position:relative;background:#000;border-radius:calc(var(--radius-xl) - var(--space-4));overflow:hidden;box-shadow:var(--shadow-md);padding:var(--space-3)}
+    video{width:100%;max-width:640px;margin:0 auto;aspect-ratio:16/9;background:#000;display:block;border-radius:calc(var(--radius-lg) - 2px)}
+    .overlay{position:absolute;inset:auto var(--space-4) var(--space-4) auto;display:flex;gap:var(--space-2)}
+    .pill{padding:.45rem .8rem;border-radius:999px;background:rgba(0,0,0,.58);backdrop-filter:blur(10px);color:#fff;font-size:.82rem}
+    .controls{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);padding-top:var(--space-4)}
+    .btn{min-height:44px;padding:.8rem 1rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2)}
+    .btn-primary{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
+    .btn-primary:hover{background:var(--color-primary-hover)}
+    .status{padding-top:var(--space-3);color:var(--color-text-muted);font-size:var(--text-sm)}
+    .panel-head{display:flex;justify-content:space-between;align-items:end;gap:var(--space-4);padding-bottom:var(--space-4)}
+    .panel-head h2{font-size:var(--text-lg)}
+    .panel-head p{font-size:var(--text-sm);color:var(--color-text-muted)}
+    .channel-list{display:grid;gap:var(--space-3)}
+    .channel-btn{width:100%;text-align:left;padding:var(--space-4);border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface-2);display:grid;gap:.2rem}
+    .channel-btn .name{font-weight:700}
+    .channel-btn .meta{font-size:var(--text-sm);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .channel-btn.active{background:var(--color-primary-highlight);border-color:color-mix(in srgb, var(--color-primary) 40%, var(--color-border))}
+    .hint{margin-top:var(--space-4);padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-offset);font-size:var(--text-sm);color:var(--color-text-muted)}
+    .error{color:var(--color-error)}
+    @media (max-width: 900px){.layout{grid-template-columns:1fr}video{max-width:100%}}
   </style>
 </head>
 <body>
-<div id="sidebar">
-  <h1>&#128250; IPTV Romania</h1>
-  <div id="search"><input type="text" id="searchInput" placeholder="Buscar canal..." oninput="filterChannels()"/></div>
-  <div id="channel-list"></div>
-</div>
-<div id="main">
-  <div id="player-header">
-    <h2 id="now-playing">Selecciona un canal</h2>
-    <p id="stream-url">Carga el archivo M3U y elige un canal de la lista</p>
-  </div>
-  <div id="video-wrap">
-    <div id="placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><p>Ningún canal seleccionado</p></div>
-    <video id="video" controls style="display:none"></video>
-    <div id="error-msg">&#9888; No se puede reproducir este stream</div>
-  </div>
-  <div id="status-bar" id="status">Listo &mdash; <span id="ch-count">0</span> canales cargados</div>
-</div>
-<script>
-  const M3U_URL = 'https://raw.githubusercontent.com/SilveR-41/IPTV-Romania/main/IPTV.m3u';
-  let channels = [], hls = null;
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-label="Logo TV">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="3"></rect><path d="M8 20h8"></path><path d="M12 17v3"></path><path d="M7 2l5 3 5-3"></path></svg>
+        </div>
+        <div>
+          <h1>Canales Rumanía</h1>
+          <p>Preview más pequeña y controles de pantalla.</p>
+        </div>
+      </div>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Cambiar tema">◐</button>
+    </header>
 
-  async function loadM3U() {
-    try {
-      const res = await fetch(M3U_URL);
-      const text = await res.text();
-      channels = parseM3U(text);
-      document.getElementById('ch-count').textContent = channels.length;
-      renderChannels(channels);
-    } catch(e) {
-      document.getElementById('ch-count').textContent = 'Error al cargar M3U';
+    <main class="layout">
+      <section class="player-panel">
+        <div class="player-wrap">
+          <div class="video-shell" id="playerShell">
+            <video id="video" controls autoplay muted playsinline></video>
+            <div class="overlay">
+              <span class="pill">LIVE</span>
+              <span class="pill" id="currentChannel">Cargando…</span>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn btn-primary" id="fullscreenBtn" type="button">Hacer grande</button>
+            <button class="btn" id="maximizeBtn" type="button">Maximizar pantalla</button>
+            <button class="btn" id="reloadBtn" type="button">Recargar canal</button>
+          </div>
+          <p class="status" id="status">Preparando reproductor…</p>
+        </div>
+      </section>
+
+      <aside class="channels-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Canales</h2>
+            <p>Pulsa uno para cambiar la emisión.</p>
+          </div>
+        </div>
+        <div class="channel-list" id="channelList"></div>
+        <div class="hint">Si uno no carga, prueba otro. Algunos streams pueden fallar por geo-bloqueo, tokens temporales o CORS del proveedor.</div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const channels = [
+      { name: 'Canal 1', info: 'Google DAI', url: 'https://dai.google.com/linear/hls/pa/event/lntFTtOxQHqgDcnf6IyHHg/stream/453aeaa4-01ce-402a-a59d-46ff58e1b31b:BRU/variant/846ff342d0a32653794f4dd9a206b1c3/bandwidth/4884000.m3u8' },
+      { name: 'Kanal D Romania', info: 'stream1.kanald.ro', url: 'https://stream1.kanald.ro/iphone/knd-live.m3u8' },
+      { name: 'Antena Monden', info: 'stream1.antenaplay.ro', url: 'https://stream1.antenaplay.ro/live/AntenaMonden/index.m3u8' }
+    ];
+
+    const video = document.getElementById('video');
+    const statusEl = document.getElementById('status');
+    const currentChannelEl = document.getElementById('currentChannel');
+    const playerShell = document.getElementById('playerShell');
+    const listEl = document.getElementById('channelList');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const maximizeBtn = document.getElementById('maximizeBtn');
+    const reloadBtn = document.getElementById('reloadBtn');
+    const themeToggle = document.querySelector('[data-theme-toggle]');
+    const root = document.documentElement;
+    let hls = null;
+    let activeIndex = 0;
+    let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    root.setAttribute('data-theme', theme);
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.classList.toggle('error', isError);
     }
-  }
 
-  function parseM3U(text) {
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-    const result = [];
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith('#EXTINF')) {
-        const nameMatch = lines[i].match(/,(.+)$/);
-        const name = nameMatch ? nameMatch[1].trim() : 'Canal ' + (result.length + 1);
-        const url = lines[i + 1] && !lines[i + 1].startsWith('#') ? lines[i + 1] : null;
-        if (url) result.push({ name, url });
+    function renderChannels() {
+      listEl.innerHTML = channels.map((channel, index) => `
+        <button class="channel-btn ${index === activeIndex ? 'active' : ''}" data-index="${index}" type="button" aria-pressed="${index === activeIndex}">
+          <span class="name">${channel.name}</span>
+          <span class="meta">${channel.info}</span>
+        </button>
+      `).join('');
+      listEl.querySelectorAll('.channel-btn').forEach(btn => btn.addEventListener('click', () => loadChannel(Number(btn.dataset.index))));
+    }
+
+    function destroyPlayer() {
+      if (hls) { hls.destroy(); hls = null; }
+      video.removeAttribute('src');
+      video.load();
+    }
+
+    function loadChannel(index) {
+      activeIndex = index;
+      renderChannels();
+      destroyPlayer();
+      const channel = channels[index];
+      currentChannelEl.textContent = channel.name;
+      setStatus(`Cargando ${channel.name}…`);
+
+      if (window.Hls && Hls.isSupported()) {
+        hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
+        hls.loadSource(channel.url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          setStatus(`${channel.name} listo. Si no arranca, pulsa play.`);
+          video.play().catch(() => setStatus(`${channel.name} listo. Pulsa play para iniciar.`));
+        });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data && data.fatal) {
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              setStatus(`Error de red en ${channel.name}. Puede estar bloqueado o caído.`, true);
+              hls.startLoad();
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              setStatus(`Error de media en ${channel.name}. Intentando recuperar…`, true);
+              hls.recoverMediaError();
+            } else {
+              setStatus(`No se pudo reproducir ${channel.name}.`, true);
+              destroyPlayer();
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = channel.url;
+        video.addEventListener('loadedmetadata', () => {
+          setStatus(`${channel.name} listo.`);
+          video.play().catch(() => setStatus(`${channel.name} listo. Pulsa play para iniciar.`));
+        }, { once: true });
+      } else {
+        setStatus('Tu navegador no soporta HLS.', true);
       }
     }
-    return result;
-  }
 
-  function renderChannels(list) {
-    const container = document.getElementById('channel-list');
-    container.innerHTML = '';
-    list.forEach((ch, idx) => {
-      const div = document.createElement('div');
-      div.className = 'channel-item';
-      div.dataset.idx = idx;
-      const initials = ch.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-      div.innerHTML = '<div class="ch-icon">' + initials + '</div><span>' + ch.name + '</span>';
-      div.onclick = () => playChannel(idx);
-      container.appendChild(div);
+    fullscreenBtn.addEventListener('click', () => {
+      if (playerShell.requestFullscreen) playerShell.requestFullscreen();
+      else if (playerShell.webkitRequestFullscreen) playerShell.webkitRequestFullscreen();
+      else if (playerShell.msRequestFullscreen) playerShell.msRequestFullscreen();
     });
-  }
 
-  function filterChannels() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = channels.filter(c => c.name.toLowerCase().includes(q));
-    renderChannels(filtered);
-  }
+    maximizeBtn.addEventListener('click', () => {
+      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+      else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
+      else if (document.documentElement.msRequestFullscreen) document.documentElement.msRequestFullscreen();
+    });
 
-  function playChannel(idx) {
-    document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
-    const items = document.querySelectorAll('.channel-item');
-    items.forEach(el => { if (parseInt(el.dataset.idx) === idx) el.classList.add('active'); });
-    const ch = channels[idx];
-    document.getElementById('now-playing').textContent = ch.name;
-    document.getElementById('stream-url').textContent = ch.url;
-    document.getElementById('placeholder').style.display = 'none';
-    const video = document.getElementById('video');
-    video.style.display = 'block';
-    const errMsg = document.getElementById('error-msg');
-    errMsg.style.display = 'none';
-    if (hls) { hls.destroy(); hls = null; }
-    if (Hls.isSupported()) {
-      hls = new Hls();
-      hls.loadSource(ch.url);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-      hls.on(Hls.Events.ERROR, (e, data) => { if (data.fatal) { errMsg.style.display = 'block'; setTimeout(() => errMsg.style.display = 'none', 4000); } });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = ch.url;
-      video.play();
-    } else {
-      errMsg.style.display = 'block';
-    }
-  }
+    reloadBtn.addEventListener('click', () => loadChannel(activeIndex));
+    themeToggle.addEventListener('click', () => {
+      theme = theme === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', theme);
+    });
 
-  loadM3U();
-</script>
+    renderChannels();
+    loadChannel(0);
+  </script>
 </body>
 </html>
