@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="ro">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>canales-tv-romania-github-video-max</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Canale TV România - m3u8</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
   <style>
     :root, [data-theme="light"] {
@@ -47,7 +47,7 @@
     video:fullscreen{max-width:none;width:100vw;height:100vh;aspect-ratio:auto;object-fit:contain;border-radius:0;background:#000}
     .overlay{position:absolute;inset:auto var(--space-4) var(--space-4) auto;display:flex;gap:var(--space-2)}
     .pill{padding:.45rem .8rem;border-radius:999px;background:rgba(0,0,0,.58);backdrop-filter:blur(10px);color:#fff;font-size:.82rem}
-    .controls{display:flex;flex-wrap:wrap;gap:var(--space-3);padding-top:var(--space-4)}
+    .controls{display:flex;flex-wrap:wrap;gap:var(--space-3);padding-top:var(--space-4);margin-bottom:var(--space-4)}
     .btn{min-height:44px;padding:.8rem 1rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);cursor:pointer}
     .btn-primary{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
     .btn-primary:hover{background:var(--color-primary-hover)}
@@ -70,22 +70,10 @@
     <header class="topbar">
       <div class="brand">
         <div class="logo" aria-label="Logo TV"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="3"></rect><path d="M8 20h8"></path><path d="M12 17v3"></path><path d="M7 2l5 3 5-3"></path></svg></div>
-        <div><h1>Canales desde GitHub</h1><p>El botón maximiza solo el vídeo.</p></div>
+        <div><h1>Canale TV România</h1><p>Redare canale cu fișiere m3u8 staționare.</p></div>
       </div>
-      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Cambiar tema">◐</button>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Schimbă tema">◐</button>
     </header>
-
-    <section class="source-panel">
-      <div class="source-grid">
-        <div class="field">
-          <label for="githubUrl">URL raw de GitHub</label>
-          <input id="githubUrl" class="input" type="url" placeholder="https://raw.githubusercontent.com/usuario/repo/main/canales.json" />
-        </div>
-        <button id="loadGithubBtn" class="btn btn-primary" type="button">Cargar desde GitHub</button>
-      </div>
-      <p class="help">Acepta JSON o M3U simple desde un archivo raw público de GitHub. [web:189][web:195][web:201]</p>
-      <p class="status" id="githubStatus">Esperando una URL raw de GitHub.</p>
-    </section>
 
     <main class="layout">
       <section class="player-panel">
@@ -94,42 +82,46 @@
             <video id="video" controls autoplay muted playsinline></video>
             <div class="overlay">
               <span class="pill">LIVE</span>
-              <span class="pill" id="currentChannel">Sin canal</span>
+              <span class="pill" id="currentChannel">Fără canal</span>
             </div>
           </div>
           <div class="controls">
-            <button class="btn btn-primary" id="fullscreenBtn" type="button">Maximizar vídeo</button>
-            <button class="btn" id="reloadBtn" type="button">Recargar canal</button>
+            <button class="btn" id="muteBtn" type="button" title="Mutează/Dezmutează">Mutează</button>
+            <button class="btn" id="fullscreenBtn" type="button" title="Maximizează videoclipul">Maximizează</button>
+            <!-- Botón de recargar PÁGINA en rumano -->
+            <button class="btn" id="reloadPageBtn" type="button">Reîncărcați pagina</button>
           </div>
-          <p class="status" id="status">Carga una lista desde GitHub para empezar.</p>
+          <p class="status" id="status">Selectează un canal.</p>
         </div>
       </section>
 
       <aside class="channels-panel">
         <div class="panel-head">
-          <div><h2>Canales</h2><p>Se rellenan automáticamente desde GitHub.</p></div>
+          <div><h2>Canale</h2><p>Listă fixă inclusă în cod.</p></div>
         </div>
         <div class="channel-list" id="channelList"></div>
-        <div class="hint">Usa un enlace raw público. Las rutas raw de GitHub sirven el contenido del fichero directamente y se pueden leer con <code>fetch()</code> si son públicas. [web:189][web:191][web:201]</div>
       </aside>
     </main>
   </div>
 
   <script>
-    const video = document.getElementById('video');
-    const statusEl = document.getElementById('status');
-    const githubStatusEl = document.getElementById('githubStatus');
+    const video           = document.getElementById('video');
+    const statusEl        = document.getElementById('status');
     const currentChannelEl = document.getElementById('currentChannel');
-    const listEl = document.getElementById('channelList');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const reloadBtn = document.getElementById('reloadBtn');
-    const loadGithubBtn = document.getElementById('loadGithubBtn');
-    const githubUrlInput = document.getElementById('githubUrl');
-    const themeToggle = document.querySelector('[data-theme-toggle]');
-    const root = document.documentElement;
+    const listEl          = document.getElementById('channelList');
+    const muteBtn         = document.getElementById('muteBtn');
+    const fullscreenBtn   = document.getElementById('fullscreenBtn');
+    const reloadPageBtn   = document.getElementById('reloadPageBtn');
+    const themeToggle     = document.querySelector('[data-theme-toggle]');
+    const root            = document.documentElement;
+
+    const channels = [
+      { name: 'Antena 1 HD', url: 'https://dai.google.com/linear/hls/pa/event/lntFTtOxQHqgDcnf6IyHHg/stream/9e941377-b328-439f-8986-f1d44610aaed:BRU/master.m3u8' },
+      { name: 'Antena Stars HD', url: 'https://dai.google.com/linear/hls/pa/event/f_y14PC5R0Cxqus6Xy1-Kg/stream/06ee7afe-6ccc-4975-89d1-551631947cee:GRQ/master.m3u8' },
+      { name: 'Kanal D SD', url: 'https://stream1.kanald.ro/iphone/knd-live_mid/index.m3u8' }
+    ];
 
     let hls = null;
-    let channels = [];
     let activeIndex = 0;
     let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     root.setAttribute('data-theme', theme);
@@ -139,9 +131,8 @@
       statusEl.classList.toggle('error', isError);
     }
 
-    function setGithubStatus(text, isError = false) {
-      githubStatusEl.textContent = text;
-      githubStatusEl.classList.toggle('error', isError);
+    function updateMuteBtn() {
+      muteBtn.textContent = video.muted ? 'Dezmutează' : 'Mutează';
     }
 
     function destroyPlayer() {
@@ -151,87 +142,41 @@
     }
 
     function renderChannels() {
-      if (!channels.length) {
-        listEl.innerHTML = '<div class="hint">No hay canales cargados todavía.</div>';
-        return;
-      }
       listEl.innerHTML = channels.map((channel, index) => `
         <button class="channel-btn ${index === activeIndex ? 'active' : ''}" data-index="${index}" type="button" aria-pressed="${index === activeIndex}">
-          <span class="name">${channel.name || 'Sin nombre'}</span>
-          <span class="meta">${channel.info || channel.url}</span>
+          <span class="name">${channel.name}</span>
+          <span class="meta">${channel.url}</span>
         </button>
       `).join('');
       listEl.querySelectorAll('.channel-btn').forEach(btn => btn.addEventListener('click', () => loadChannel(Number(btn.dataset.index))));
     }
 
-    function parseJsonChannels(text) {
-      const data = JSON.parse(text);
-      if (!Array.isArray(data)) throw new Error('El JSON debe ser un array.');
-      return data.filter(item => item && item.url).map(item => ({ name: item.name || 'Canal', info: item.info || 'GitHub JSON', url: item.url }));
-    }
-
-    function parseM3U(text) {
-      const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-      const parsed = [];
-      let pendingName = 'Canal';
-      for (const line of lines) {
-        if (line.startsWith('#EXTINF')) {
-          const parts = line.split(',');
-          pendingName = parts.length > 1 ? parts.slice(1).join(',').trim() : 'Canal';
-        } else if (!line.startsWith('#')) {
-          parsed.push({ name: pendingName || 'Canal', info: 'GitHub M3U', url: line });
-          pendingName = 'Canal';
-        }
-      }
-      return parsed;
-    }
-
-    async function loadFromGithub(url) {
-      setGithubStatus('Cargando archivo desde GitHub…');
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const text = await response.text();
-        let parsed = [];
-        try { parsed = parseJsonChannels(text); } catch { parsed = parseM3U(text); }
-        if (!parsed.length) throw new Error('No se encontraron canales válidos.');
-        channels = parsed;
-        activeIndex = 0;
-        renderChannels();
-        loadChannel(0);
-        setGithubStatus(`Se cargaron ${channels.length} canales desde GitHub.`);
-      } catch (error) {
-        setGithubStatus(`No se pudo cargar el archivo: ${error.message}`, true);
-      }
-    }
-
     function loadChannel(index) {
-      if (!channels.length) return;
       activeIndex = index;
       renderChannels();
       destroyPlayer();
       const channel = channels[index];
       currentChannelEl.textContent = channel.name;
-      setStatus(`Cargando ${channel.name}…`);
+      setStatus(`Se încarcă ${channel.name}…`);
 
       if (window.Hls && Hls.isSupported()) {
         hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
         hls.loadSource(channel.url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setStatus(`${channel.name} listo. Si no arranca, pulsa play.`);
-          video.play().catch(() => setStatus(`${channel.name} listo. Pulsa play para iniciar.`));
+          setStatus(`${channel.name} gata. Dacă nu pornește, apasă play.`);
+          video.play().catch(() => setStatus(`${channel.name} gata. Apasă play pentru a porni.`));
         });
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (data && data.fatal) {
             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              setStatus(`Error de red en ${channel.name}. Puede estar bloqueado o caído.`, true);
+              setStatus(`Eroare de rețea în ${channel.name}. Puede estar bloqueado o caído.`, true);
               hls.startLoad();
             } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-              setStatus(`Error de media en ${channel.name}. Intentando recuperar…`, true);
+              setStatus(`Eroare media în ${channel.name}. Încerc să recuperăm…`, true);
               hls.recoverMediaError();
             } else {
-              setStatus(`No se pudo reproducir ${channel.name}.`, true);
+              setStatus(`Nu s‑a putut reda ${channel.name}.`, true);
               destroyPlayer();
             }
           }
@@ -239,21 +184,18 @@
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = channel.url;
         video.addEventListener('loadedmetadata', () => {
-          setStatus(`${channel.name} listo.`);
-          video.play().catch(() => setStatus(`${channel.name} listo. Pulsa play para iniciar.`));
+          setStatus(`${channel.name} gata.`);
+          updateMuteBtn();
+          video.play().catch(() => setStatus(`${channel.name} gata. Apasă play pentru a porni.`));
         }, { once: true });
       } else {
-        setStatus('Tu navegador no soporta HLS.', true);
+        setStatus('Browserul tău nu suportă HLS.', true);
       }
     }
 
-    loadGithubBtn.addEventListener('click', () => {
-      const url = githubUrlInput.value.trim();
-      if (!url) {
-        setGithubStatus('Pega una URL raw de GitHub.', true);
-        return;
-      }
-      loadFromGithub(url);
+    muteBtn.addEventListener('click', () => {
+      video.muted = !video.muted;
+      updateMuteBtn();
     });
 
     fullscreenBtn.addEventListener('click', () => {
@@ -263,13 +205,19 @@
       else if (video.msRequestFullscreen) video.msRequestFullscreen();
     });
 
-    reloadBtn.addEventListener('click', () => loadChannel(activeIndex));
+    // Botón que recarga la PÁGINA completa
+    reloadPageBtn.addEventListener('click', () => {
+      location.reload();
+    });
+
     themeToggle.addEventListener('click', () => {
       theme = theme === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', theme);
     });
 
+    updateMuteBtn();
     renderChannels();
+    loadChannel(0);
   </script>
 </body>
 </html>
