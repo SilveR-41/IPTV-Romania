@@ -45,8 +45,8 @@
     .video-shell{position:relative;background:#000;border-radius:calc(var(--radius-xl) - var(--space-4));overflow:hidden;box-shadow:var(--shadow-md);padding:var(--space-3)}
     video{width:100%;max-width:640px;margin:0 auto;aspect-ratio:16/9;background:#000;display:block;border-radius:calc(var(--radius-lg) - 2px)}
     video:fullscreen{max-width:none;width:100vw;height:100vh;aspect-ratio:auto;object-fit:contain;border-radius:0;background:#000}
-    .overlay{position:absolute;inset:auto var(--space-4) var(--space-4) auto;display:flex;gap:var(--space-2)}
-    .pill{padding:.45rem .8rem;border-radius:999px;background:rgba(0,0,0,.58);backdrop-filter:blur(10px);color:#fff;font-size:.82rem}
+    .video-labels{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3);margin-top:var(--space-2)}
+    .pill{padding:.45rem .8rem;border-radius:999px;background:var(--color-primary);color:var(--color-text-inverse);display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap;font-size:.82rem}
     .controls{display:flex;flex-wrap:wrap;gap:var(--space-3);padding-top:var(--space-4);margin-bottom:var(--space-4)}
     .btn{min-height:44px;padding:.8rem 1rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);cursor:pointer}
     .btn-primary{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
@@ -78,18 +78,20 @@
     <main class="layout">
       <section class="player-panel">
         <div class="player-wrap">
+          <!-- LIVE + canal arriba, fuera del recuadro del vídeo -->
+          <div class="video-labels">
+            <span class="pill">LIVE</span>
+            <span class="pill" id="currentChannel">Fără canal</span>
+          </div>
+
           <div class="video-shell">
             <video id="video" controls autoplay muted playsinline></video>
-            <div class="overlay">
-              <span class="pill">LIVE</span>
-              <span class="pill" id="currentChannel">Fără canal</span>
-            </div>
           </div>
+
           <div class="controls">
             <button class="btn" id="muteBtn" type="button" title="Mutează/Dezmutează">Mutează</button>
             <button class="btn" id="fullscreenBtn" type="button" title="Maximizează videoclipul">Maximizează</button>
-            <!-- Botón de recargar PÁGINA en rumano -->
-            <button class="btn" id="reloadPageBtn" type="button">Reîncărcați pagina</button>
+            <button class="btn" id="reloadPageBtn" type="button">Recargă pagina</button>
           </div>
           <p class="status" id="status">Selectează un canal.</p>
         </div>
@@ -205,7 +207,6 @@
       else if (video.msRequestFullscreen) video.msRequestFullscreen();
     });
 
-    // Botón que recarga la PÁGINA completa
     reloadPageBtn.addEventListener('click', () => {
       location.reload();
     });
